@@ -118,7 +118,7 @@ const PANELS_ATIVOS=["arquitetura","materiais","tipografia","caes"];
 
 // ---------------- ESTADO ----------------
 const D={
-  nome:"",tagline:"",produto:"",proposito:"",visao:"",percDes:"",percEvit:"",
+  nome:"",responsavel:"",email:"",celular:"",tagline:"",produto:"",proposito:"",visao:"",percDes:"",percEvit:"",
   valores:"",
   segmento:[],momento:[],momentoPorque:"",naoMostra:"",
   diferencial:"",canais:[],faixaPreco:"",
@@ -146,6 +146,15 @@ const SCREENS=[
         <input type="text" data-model="nome" value="${esc(D.nome)}" placeholder="Nome da marca" style="text-align:center;font-size:18px">
       </div>
     </div>`, valid:()=>D.nome.trim()!=="" },
+
+  { title:"Contato", render:()=>`
+    <h1 class="q">Quem fala pela marca?</h1>
+    <p class="q-sub">Para eu guardar o contato e enviar uma cópia das respostas, com a leitura do briefing.</p>
+    <div class="field"><label class="fl">Nome do responsável</label><input type="text" data-model="responsavel" value="${esc(D.responsavel)}" placeholder="Com quem estou falando" autocomplete="name"></div>
+    <div class="field"><label class="fl">E-mail</label><input type="email" data-model="email" value="${esc(D.email)}" placeholder="nome@marca.com.br" autocomplete="email" inputmode="email"></div>
+    <div class="field"><label class="fl">Celular / WhatsApp</label><input type="tel" data-model="celular" value="${esc(D.celular)}" placeholder="(16) 99999-9999" autocomplete="tel" inputmode="tel"></div>
+    <div class="limit">Obrigatório: o e-mail recebe a cópia das respostas.</div>`,
+    valid:()=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(D.email.trim()) },
 
   { title:"Abertura · O momento", render:()=>`
     <h1 class="q">Em que momento a marca está?</h1>
@@ -639,6 +648,20 @@ function sendBriefing(){
   const secs=buildText().split(/\n(?=## )/).slice(1); // pula "Propriedades"
   const p=new URLSearchParams();
   p.set('marca',D.nome.trim());
+  p.set('responsavel',D.responsavel.trim());
+  p.set('email',D.email.trim());
+  p.set('whatsapp',D.celular.trim());
+  const AQ=ARQ[D._arqP]||{t:'',d:''};
+  p.set('arq_tag',AQ.t||''); p.set('arq_desc',AQ.d||'');
+  const AS=ARQ[D._arqS]||{t:''}; p.set('arq2_tag',AS.t||'');
+  const MP=MOODS.find(m=>m.id===D.moodPrincipal); p.set('mood_palavras',MP?MP.words.join(' · '):'');
+  [0,1,2,3,4].forEach(k=>p.set('mc'+(k+1),MP?MP.cols[k]:''));
+  p.set('termo_on',D.termo.some(v=>v)?'1':'');
+  p.set('essencia_txt',D.essencia.join(' · '));
+  p.set('atmosfera_txt',atmosferaFinal().join(' · '));
+  p.set('tom_txt',D.tom.join(' · ')); p.set('pers_txt',D.personalidade.join(' · ')); p.set('rel_txt',D.relacionamento.join(' · '));
+  p.set('publico_txt',[D.faixa.join(', '),D.classe.length?'classe '+D.classe.join(', '):''].filter(Boolean).join(' · '));
+  TERMO.forEach((t,i)=>{ const v=D.termo[i]; p.set('tb'+(i+1), v?[1,2,3,4,5,6,7].map(n=>n===v?'●':'○').join(''):''); });
   p.set('segmento',J(D.segmento));
   p.set('momento',D.momento[0]||'');
   p.set('arq_principal',D.arqPrincipal||'');
