@@ -30,6 +30,11 @@ const CLASSES=["A","B","C","D-E"];
 const ESTILOS=["Estudantes","Profissionais criativos","Empreendedores","CLT / Executivos","Autônomos / liberais","Aposentados","Outros"];
 const INTERESSES=["Moda / Estilo","Tecnologia","Saúde e bem-estar","Sustentabilidade","Pets","Viagens","Música / Cultura pop","Esporte","Gastronomia","Espiritualidade"];
 const RELACOES=["Cliente recorrente","Compra por impulso","Indicação","Descobre online","Loja física","Eventos / feiras"];
+const TERMO=[
+  ["Tradicional","Moderna"],["Séria","Divertida"],["Acessível","Exclusiva"],["Feminina","Masculina"],
+  ["Jovem","Madura"],["Discreta","Ousada"],["Técnica","Intuitiva"],["Rebelde","Disciplinada"],
+  ["Luxuosa","Popular"],["Artesanal","Industrial"],["Delicada","Robusta"],["Corporativa","Descontraída"],
+];
 const SEGMENTOS=["Calçados","Moda","Alimentos","Outro"];
 const MOMENTOS=["Lançamento","Rebrand","Crescimento"];
 const CANAIS=["Loja própria","Multimarcas","E-commerce","Atacado","Representantes","Marketplace","Redes sociais / WhatsApp","Eventos / feiras"];
@@ -124,6 +129,7 @@ const D={
   arqScores:{},arqPrincipal:"",arqSecundario:"",_arqP:"",_arqS:"",
   moodPrincipal:"",moodSecundario:"",
   pArquitetura:[],pMateriais:[],pTipografia:[],pCaes:[],
+  termo:TERMO.map(()=>0),
 };
 Object.keys(ARQ).forEach(k=>D.arqScores[k]=0);
 try{const m=new URLSearchParams(location.search).get('marca');if(m)D.nome=m.slice(0,120);}catch(e){}
@@ -220,6 +226,8 @@ const SCREENS=[
   // painéis de estilo (proxies projetivos) — um por tela, gerados dos ativos
   ...PANELS_ATIVOS.map(key=>({title:"Crescimento · Estilo", panel:key})),
 
+  { title:"Crescimento · Termômetro", thermo:true, custom:true },
+
   { title:"Balanço · Aplicações", render:()=>`
     <h1 class="q">Onde a marca vai aparecer.</h1>
     <p class="q-sub">As aplicações e o que já existe.</p>
@@ -259,13 +267,14 @@ function paint(dir){
   else if(sc.reveal) html=revealHTML();
   else if(sc.mood) html=moodHTML();
   else if(sc.panel) html=panelHTML(sc.panel);
+  else if(sc.thermo) html=thermoHTML();
   else if(sc.result) html=resultHTML();
   else html=`<div class="inner">${sc.render()}</div>`;
 
   // cria tela nova com animação
   const el=document.createElement('div');
   el.className='screen '+(dir>=0?'enter-next':'enter-prev');
-  el.innerHTML = (sc.duel!==undefined||sc.reveal||sc.mood||sc.panel||sc.result)?`<div class="inner">${html}</div>`:html;
+  el.innerHTML = (sc.duel!==undefined||sc.reveal||sc.mood||sc.panel||sc.thermo||sc.result)?`<div class="inner">${html}</div>`:html;
   // remove QUALQUER tela existente (evita sobreposição em transições rápidas de duelo)
   viewport.querySelectorAll('.screen').forEach(o=>{
     if(o.classList.contains('exit-next')||o.classList.contains('exit-prev')){ o.remove(); return; }
@@ -281,6 +290,7 @@ function paint(dir){
   if(sc.duel!==undefined) bindDuel(el,sc.duel);
   if(sc.mood) bindMood(el);
   if(sc.panel) bindPanel(el,sc.panel);
+  if(sc.thermo) bindThermo(el);
 
   // footer
   updateFoot();
@@ -452,6 +462,60 @@ function bindPanel(el,key){
   });
 }
 
+
+// ---- termômetro de atributos ----
+function thermoHTML(){
+  const rows=TERMO.map((p,i)=>{
+    const v=D.termo[i];
+    return `<div class="th-row ${v?'set':''}" data-i="${i}">
+      <div class="th-ends"><span class="th-l ${v&&v<4?'hot':''}">${p[0]}</span><span class="th-r ${v>4?'hot':''}">${p[1]}</span></div>
+      <input type="range" class="th-range" min="1" max="7" step="1" value="${v||4}" aria-label="${p[0]} ou ${p[1]}">
+      <div class="th-ticks">${[1,2,3,4,5,6,7].map(n=>`<i class="${v===n?'on':''}"></i>`).join('')}</div>
+    </div>`;
+  }).join('');
+  return `<div class="qnum">${icon('ph-target')} Termômetro</div>
+    <h1 class="q">Onde a marca se posiciona?</h1>
+    <p class="q-sub">Arraste cada barra para o lado que mais combina. O centro é neutro. Pode deixar em branco o que não fizer sentido.</p>
+    <div class="th-list">${rows}</div>
+    <div class="panel-note"><a href="#" onclick="resetThermo();return false;">Limpar todos</a></div>`;
+}
+function thermoMark(row,i,v){
+  D.termo[i]=v;
+  row.classList.add('set');
+  row.querySelector('.th-l').classList.toggle('hot',v<4);
+  row.querySelector('.th-r').classList.toggle('hot',v>4);
+  row.querySelectorAll('.th-ticks i').forEach((t,k)=>t.classList.toggle('on',k+1===v));
+}
+function bindThermo(el){
+  el.querySelectorAll('.th-row').forEach(row=>{
+    const i=+row.dataset.i, r=row.querySelector('.th-range');
+    const mark=()=>thermoMark(row,i,+r.value);
+    r.addEventListener('input',mark);
+    r.addEventListener('change',mark);
+    r.addEventListener('pointerup',mark);   // toque no ponto central também conta
+    r.addEventListener('keydown',e=>{ if(e.key.startsWith('Arrow')) setTimeout(mark,0); });
+  });
+}
+function resetThermo(){
+  D.termo=TERMO.map(()=>0);
+  const inner=document.querySelector('.screen:last-child .inner'); if(inner){inner.innerHTML=thermoHTML();bindThermo(inner);}
+}
+function termoLinhas(){
+  return TERMO.map((p,i)=>{
+    const v=D.termo[i]; if(!v) return '';
+    const bar=[1,2,3,4,5,6,7].map(n=>n===v?'●':'○').join('');
+    return `${p[0]} ${bar} ${p[1]}`;
+  }).filter(Boolean);
+}
+function termoResultHTML(){
+  const rows=TERMO.map((p,i)=>{
+    const v=D.termo[i]; if(!v) return '';
+    return `<div class="rrow th-res"><div class="rv th-rl">${p[0]}</div><div class="th-mini">${[1,2,3,4,5,6,7].map(n=>`<i class="${n===v?'on':''}"></i>`).join('')}</div><div class="rv th-rr">${p[1]}</div></div>`;
+  }).filter(Boolean).join('');
+  if(!rows) return '';
+  return `<div class="result-box"><h3>${icon('ph-target')} Termômetro de atributos</h3>${rows}</div>`;
+}
+
 // ---- resultado ----
 function atmosferaFinal(){
   const s=[...D.atmosfera];
@@ -480,6 +544,7 @@ function resultHTML(){
       ${row('Onde vende',D.canais.join(' · '))}${row('Faixa de preço',esc(D.faixaPreco))}
       ${row('Aplicações',D.aplicacoes.join(' · '))}${row('O que já existe',D.existentes.join(' · '))}${row('Manter / abandonar',esc(D.manterAbandonar))}</div>
     ${panelResultHTML()}
+    ${termoResultHTML()}
     <div class="copybar">
       <button class="btn" id="sendBtn" onclick="sendBriefing()">${icon('ph-rocket')} Enviar briefing</button>
       <button class="btn ghost" onclick="copyAll()">${icon('ph-copy')} Copiar tudo</button>
@@ -540,7 +605,7 @@ function buildText(){
 - **Arquitetura:** ${J(D.pArquitetura)}
 - **Materiais:** ${J(D.pMateriais)}
 - **Tipografia:** ${J(D.pTipografia)}
-- **Cão-personalidade:** ${J(D.pCaes)}
+- **Cão-personalidade:** ${J(D.pCaes)}${termoLinhas().length?'\n- **Termômetro de atributos:**\n'+termoLinhas().map(l=>'  - '+l).join('\n'):''}
 
 ## Balanço e Sementes
 - **Aplicações:** ${J(D.aplicacoes)}

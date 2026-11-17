@@ -153,3 +153,28 @@ input[type=text]:focus,textarea:focus{border-color:var(--accent);background:#fff
 .cpy:hover{border-color:var(--accent-dark);color:var(--dark)}
 .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;padding:13px 22px;border-radius:980px;font-size:14px;font-weight:600;opacity:0;transition:all .3s;pointer-events:none;z-index:50}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* termômetro de atributos */
+.th-list{display:flex;flex-direction:column;gap:6px}
+.th-row{background:#fff;border:1.5px solid var(--border);border-radius:18px;padding:14px 18px 12px;transition:border-color .15s}
+.th-row.set{border-color:#7BF9DF99}
+.th-ends{display:flex;justify-content:space-between;gap:12px;font-size:15px;font-weight:600;color:var(--muted);margin-bottom:10px;transition:color .15s}
+.th-ends .hot{color:var(--dark)}
+.th-range{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;margin:0;cursor:pointer;display:block;touch-action:pan-y}
+.th-range:focus{outline:none}
+.th-range::-webkit-slider-runnable-track{height:6px;border-radius:6px;background:var(--surface2);border:1px solid var(--border)}
+.th-range::-moz-range-track{height:6px;border-radius:6px;background:var(--surface2);border:1px solid var(--border)}
+.th-range::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;margin-top:-11px;background:#fff;border:2px solid var(--muted);box-shadow:0 1px 4px rgba(0,0,0,.12);transition:background .15s,border-color .15s}
+.th-range::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--muted);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.th-row.set .th-range::-webkit-slider-thumb{background:var(--accent);border-color:var(--dark)}
+.th-row.set .th-range::-moz-range-thumb{background:var(--accent);border-color:var(--dark)}
+.th-range:focus-visible::-webkit-slider-thumb{outline:2px solid var(--accent-dark);outline-offset:2px}
+.th-ticks{display:flex;justify-content:space-between;padding:0 12px;margin-top:2px}
+.th-ticks i{width:4px;height:4px;border-radius:50%;background:rgba(0,0,0,.18)}
+.th-ticks i.on{background:var(--dark)}
+.th-res{align-items:center;gap:10px}
+.th-rl{flex:1;text-align:right}
+.th-rr{flex:1}
+.th-mini{display:flex;gap:6px;align-items:center}
+.th-mini i{width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(0,0,0,.25)}
+.th-mini i.on{background:var(--accent);border-color:var(--dark)}
